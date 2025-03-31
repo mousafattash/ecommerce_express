@@ -1,6 +1,6 @@
 import cors from 'cors';
 import connectdb from '../DB/connection.js';
-
+import authRouter from './modules/auth/auth.router.js';
 const initApp=async(app, express)=>{
   app.use(express.json());
   app.use(cors());
