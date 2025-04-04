@@ -1,5 +1,6 @@
 import slugify from "slugify";
 import cloudinary from "../../utils/cloudinary";
+import e from "express";
 
 export const createProduct = async (req, res) => {
     // try {
@@ -29,12 +30,14 @@ export const createProduct = async (req, res) => {
     //     return res.status(500).json({ message: 'Internal server error' });
     // }
 
-    const { name, price, catagoryId } = req.body;
+    const { name, price, catagoryId ,discount} = req.body;
     const checkCatagory = await Category.findById(catagoryId);
     if (!checkCatagory) {
         return res.status(404).json({ message: 'Catagory not found' });
     }
     req.body.slug = slugify(name, { lower: true });
+
+
 
     const { } = await cloudinary.uploader.upload(req.file.path, {
         folder: 'products',
@@ -55,8 +58,14 @@ export const createProduct = async (req, res) => {
             });
         }
     }
-}
 
+    req.body.mainImage = {secure_url, public_id};
+    req.body.createdBy = req.user._id;
+    req.body.updatedBy = req.user._id;
+    
+    req.body.priceAfterDiscount = price - (price * (discount || 0 / 100));
+
+}
 export const getProducts = async (req, res) => {
     try {
         const products = await Product.find({}).select('name price discount mainImage ');

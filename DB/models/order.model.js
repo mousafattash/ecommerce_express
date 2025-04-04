@@ -47,6 +47,12 @@ const orderSchema = new Schema({
         type: String,
         enum: ['pending', 'completed', 'failed'],
         default: 'pending'
+    },phonenumber: {
+        type: String,
+        required: true,
+    },address: {
+        type: String,
+        required: true
     },
     paymentType: {
         type: String,
@@ -66,7 +72,7 @@ const orderSchema = new Schema({
     },
     reasonRejected: {
         type: String,
-    },
+    }, 
     updatedBy: {
         type: Schema.Types.ObjectId,
         ref: 'User',

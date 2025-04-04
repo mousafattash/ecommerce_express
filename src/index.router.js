@@ -19,6 +19,7 @@ const initApp=async(app, express)=>{
   app.use('/api/product', productRouter);
   app.use('/api/coupon', couponRouter);
   app.use('/api/cart', cartRouter);
+  app.use('/api/order', orderRouter);
 
     app.get('*', (req, res) => {
       return res.status(404).json({messafe:'Page not found'});
