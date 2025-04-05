@@ -77,6 +77,10 @@ const orderSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
+    },priceAfterDiscount: {
+        type: Number,
+        required: true,
+        min: [0, 'Final price cannot be negative']
     },
 }, { timestamps: true });
 
