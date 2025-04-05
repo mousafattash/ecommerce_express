@@ -1,4 +1,6 @@
 import Order from "../../../DB/models/order.model.js";
+import Review from "../../../DB/models/review.model.js";
+
 
 export const createReview = async (req, res) => {
     // const { productId } = req.params;
@@ -46,11 +48,7 @@ export const createReview = async (req, res) => {
     if(!review){
         return res.status(400).json({ message: 'Failed to create review' });
     }
-    // Check if the user has already reviewed this product
-    const existingReview = await Review.findOne({ userId, productId });
-    if (existingReview) {
-        return res.status(400).json({ message: 'You have already reviewed this product' });
-    }
+ 
 
     return res.status(201).json({ message: 'Review created successfully', review });
 }

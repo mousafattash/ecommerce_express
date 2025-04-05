@@ -54,8 +54,7 @@ const couponSchema = new Schema({
     }
 }, {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    
 });
 
 couponSchema.pre('save', function(next) {

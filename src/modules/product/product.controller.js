@@ -1,6 +1,8 @@
 import slugify from "slugify";
 import cloudinary from "../../utils/cloudinary";
-import e from "express";
+
+import Product from '../../../DB/models/product.model.js';
+
 
 export const createProduct = async (req, res) => {
     // try {

@@ -23,6 +23,16 @@ const reviewSchema = new Schema({
     },image: {
         type: Object, 
     },
-}, { timestamps: true });
+}, { timestamps: true,
+    toJSON:{virtuals:true},
+    toObject:{virtuals:true}
+ });
+
+reviewSchema.virtual('reviews', {
+    ref: 'Review',
+    localField: '_id',
+    foreignField: 'productId'
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 export default Review;
