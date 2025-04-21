@@ -6,6 +6,8 @@ import productRouter from './modules/product/product.router.js';
 import couponRouter from './modules/coupon/coupon.router.js';
 import cartRouter from './modules/cart/cart.router.js';
 import orderRouter from './modules/order/order.router.js';
+import adminRouter from './modules/admin/admin.router.js';
+import { Router } from 'express';
 
 const initApp=async(app, express)=>{
   app.use(express.json());
@@ -22,6 +24,7 @@ const initApp=async(app, express)=>{
   app.use('/api/coupon', couponRouter);
   app.use('/api/cart', cartRouter);
   app.use('/api/order', orderRouter);
+  app.use('/api/admin', adminRouter);
 
     app.get('*', (req, res) => {
       return res.status(404).json({messafe:'Page not found'});

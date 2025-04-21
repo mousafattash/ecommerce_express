@@ -1,2 +1,7 @@
 .env
 node_modules]
+.env*
+.env.me
+.flaskenv*
+!.env.project
+!.env.vault

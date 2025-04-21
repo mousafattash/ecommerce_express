@@ -12,11 +12,11 @@ const userSchema = new Schema({
     isAdmin: {type: Boolean, default: false},
     gender: {type: String, enum: ["male", "female"], required: true},
     status: {type: String, enum: ["active", "inactive"], default: "active"},
-    role: {type: String, enum: ["user", "admin"], default: "user"},
+    role: {type: String, enum: ['user', 'admin', 'superadmin'], default: 'user'},
     sendCode: {type: String, default: null},
 }, {timestamps: true});
 
-const User = mongoose.model("users", userSchema);
+const User = mongoose.models.users || mongoose.model("users", userSchema);
 
 export default User;
 
