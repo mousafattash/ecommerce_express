@@ -1,62 +1,61 @@
-import { Schema, model,mongoose,Types } from 'mongoose';
+import mongoose from 'mongoose';
 
-const orderSchema = new Schema({
+const orderSchema = new mongoose.Schema({
     userId: {
-        type: Schema.Types.ObjectId,
+        type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true
     },
     products: [
         {
-            productName: {
-                type: String,
-                required: true,
-            },
-            product: {
-                type: Schema.Types.ObjectId,
+            productId: {
+                type: mongoose.Schema.Types.ObjectId,
                 ref: 'Product',
+                required: true
+            },
+            name: {
+                type: String,
+                required: true
+            },
+            price: {
+                type: Number,
                 required: true
             },
             quantity: {
                 type: Number,
-                required: true,
-                min: [1, 'Quantity must be at least 1']
+                required: true
             },
-            unitPrice: {
+            finalPrice: {
                 type: Number,
-                required: true,
-                min: [0, 'Unit price cannot be negative']
-
-            },
-            totalPrice: {
-                type: Number,
-                required: true,
-                min: [0, 'Total price cannot be negative']
-            },
+                required: true
+            }
         }
     ],
     couponName: {
         type: String,
+        default: null
     },
     finalPrice: {
         type: Number,
-        required: true,
-        min: [0, 'Final price cannot be negative']
+        required: true
     },
     paymentStatus: {
         type: String,
         enum: ['pending', 'completed', 'failed'],
         default: 'pending'
-    },phonenumber: {
+    },
+    phonenumber: {
         type: String,
         required: true,
-    },address: {
+    },
+    address: {
         type: String,
         required: true
     },
     paymentType: {
         type: String,
-        enum: ['cash','credit_card'],
+        enum: ['cash', 'card'],
+        required: true
     },
     shippingAddress: {
         type: String,
@@ -64,7 +63,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['pending','cancelled','confirmed', 'onWay', 'delivered'],
+        enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'],
         default: 'pending'
     },
     note: {
@@ -74,19 +73,25 @@ const orderSchema = new Schema({
         type: String,
     }, 
     updatedBy: {
-        type: Schema.Types.ObjectId,
-        ref: 'User',
-        required: true
-    },priceAfterDiscount: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
+    priceAfterDiscount: {
         type: Number,
         required: true,
         min: [0, 'Final price cannot be negative']
     },
+    images: [{
+        url: {
+            type: String,
+            required: true
+        },
+        public_id: {
+            type: String,
+            required: true
+        }
+    }],
 }, { timestamps: true });
-
-
-
-
 
 const Order = mongoose.model('Order', orderSchema);
 export default Order;

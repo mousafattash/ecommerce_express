@@ -3,154 +3,179 @@ import Cart from '../../../DB/models/cart.model.js';
 import Product from '../../../DB/models/product.model.js';
 import Coupon from '../../../DB/models/coupon.model.js';
 import User from '../../../DB/models/user.model.js';
-const router = Router();
+import { sendOrderConfirmation } from '../../utils/sendEmail.js';
+import cloudinary from '../../utils/cloudinary.js';
+import { asyncHandler } from '../../middleware/catchError.js';
 
+export const createOrder = asyncHandler(async (req, res) => {
+  const { couponName, shippingAddress, phoneNumber, paymentType } = req.body;
+  const userId = req.id;
+  const files = req.files;
 
+  // Find user's cart
+  const cart = await Cart.findOne({ userId });
+  if (!cart) {
+    return res.status(404).json({ message: 'Cart not found' });
+  }
+  if (cart.cartItems.length === 0) {
+    return res.status(400).json({ message: 'Cart is empty' });
+  }
 
-
-export const createOrder = async (req, res) => { 
- 
-
-    const cart=await Cart.findOne({userId:req.id});
-
-    if(!cart){
-        return res.status(404).json({message:'Cart not found'});
+  // Handle coupon if provided
+  let coupon = null;
+  if (couponName) {
+    coupon = await Coupon.findOne({ name: couponName });
+    if (!coupon) {
+      return res.status(404).json({ message: 'Coupon not found' });
     }
-    if(cart.cartItems.length===0){
-        return res.status(400).json({message:'Cart is empty'});
+    if (coupon.expireDate < new Date()) {
+      return res.status(400).json({ message: 'Coupon expired' });
     }
-
-    if(couponName){
-        const coupon=await Coupon.findOne({name:couponName});
-        if(!coupon){
-            return res.status(404).json({message:'Coupon not found'});
-        }
-        if(coupon.expireDate<new Date()){
-            return res.status(400).json({message:'Coupon expired'});
-        }
-        if(coupon.usedBy.includes(req.id)){
-            return res.status(400).json({message:'Coupon already used'});
-            
-        }
-        req.body.coupon=coupon;
+    if (coupon.usedBy.includes(userId)) {
+      return res.status(400).json({ message: 'Coupon already used' });
     }
+  }
 
-    const finalProducts=[];
-    let subTotal=0;
-    for(let product of cart.products){
-        const checkProduct= await Product.findOne
-        ({ productId: product.productId, stock: { $gte: product.quantity } });
-        if(!checkProduct) {
-            return res.status(400).json({ message: `Product ${product.productId} is not avaliable` });
-        }
-    }
+  // Process products and calculate total
+  const finalProducts = [];
+  let subTotal = 0;
 
-    product=product.toObject();//convert mongoose object to js object --> bson into json
-    product.name=checkProduct.name;
-    product.price=checkProduct.price;
-    product.unitPrice=checkProduct.priceAfterDiscount;
-    product.finalPrice=checkProduct.priceAfterDiscount*product.quantity;
-    subTotal+=product.finalPrice;
-
-    finalProducts.push(product);
-
-    const user=await User.findById(req.id);
-    if(!req.body.shippingAddress){
-        req.body.shippingAddress=user.address;
-    }
-
-    if(!req.body.phoneNumber){
-        req.body.phoneNumber=user.phoneNumber;
-    }
-
-    const Order=await Order.create({
-        userId:req.id,
-        products:finalProducts,
-        couponName:couponName ?? null,
-        finalPrice:subTotal- (subTotal * (req.body.coupon?.amount / 100)|| 0),
-        shippingAddress:req.body.shippingAddress,
-        phoneNumber:req.body.phoneNumber,
-        paymentType:req.body.paymentType
+  for (const item of cart.cartItems) {
+    const product = await Product.findOne({
+      _id: item.productId,
+      stock: { $gte: item.quantity }
     });
-    await Cart.findByIdAndDelete(cart._id);
 
-    for(const product of cart.products){
-        await Product.findByIdAndUpdate(product.productId, {
-            $inc: { stock: -product.quantity }
-        });
+    if (!product) {
+      return res.status(400).json({ message: `Product ${item.productId} is not available` });
     }
 
-    if(req.body.coupon){
-        await Coupon.updateOne(
-            { _id: req.body.coupon._id },
-            { $push: { usedBy: req.id } }
-        );
+    const productData = {
+      productId: product._id,
+      name: product.name,
+      price: product.price,
+      quantity: item.quantity,
+      finalPrice: product.price * item.quantity
+    };
+
+    subTotal += productData.finalPrice;
+    finalProducts.push(productData);
+  }
+
+  // Handle image uploads
+  let uploadedImages = [];
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const result = await cloudinary.uploader.upload(file.path, {
+        folder: 'order_images',
+        resource_type: 'auto'
+      });
+      uploadedImages.push({
+        url: result.secure_url,
+        public_id: result.public_id
+      });
     }
-   await Cart.updateOne(
-        { userId: req.id },
-        { $set: { products: [] } }
+  }
+
+  // Get user details
+  const user = await User.findById(userId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  // Create order
+  const order = await Order.create({
+    userId,
+    products: finalProducts,
+    couponName: couponName ?? null,
+    finalPrice: subTotal - (subTotal * (coupon?.amount / 100) || 0),
+    shippingAddress: shippingAddress || user.address,
+    phoneNumber: phoneNumber || user.phoneNumber,
+    paymentType,
+    images: uploadedImages
+  });
+
+  // Update product stock
+  for (const product of finalProducts) {
+    await Product.findByIdAndUpdate(product.productId, {
+      $inc: { stock: -product.quantity }
+    });
+  }
+
+  // Update coupon if used
+  if (coupon) {
+    await Coupon.updateOne(
+      { _id: coupon._id },
+      { $push: { usedBy: userId } }
     );
+  }
 
+  // Clear cart
+  await Cart.findByIdAndDelete(cart._id);
 
-}
+  // Send order confirmation email
+  await sendOrderConfirmation(user.email, user.name, order._id, order.finalPrice);
 
-export const getOrdersCustomer = async (req, res) => {
-    try {
-        const orders = await Order.find({ userId: req.id })
-            .populate('products.product')
-            .populate('userId', 'name email phoneNumber address');
-        return res.status(200).json({ orders });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-}
+  return res.status(201).json({
+    message: 'Order created successfully',
+    order
+  });
+});
 
-export const getOrdersByStatus = async (req, res) => {
-    // 
-    const { status } = req.params;
-    try {
-        const orders = await Order.find({ status })
-            .populate('products.productId')
-            
-        return res.status(200).json({ orders });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-}
+export const getOrdersCustomer = asyncHandler(async (req, res) => {
+  const orders = await Order.find({ userId: req.id })
+    .populate('products.productId')
+    .populate('userId', 'name email phoneNumber address');
+  
+  return res.status(200).json({ orders });
+});
 
-export const changeOrderStatus = async (req, res) => {
-    const { orderId } = req.params;
-    if(!order){
-        return res.status(400).json({message:'order not found'});
-    }
-    order.status = req.body;
-    
-    if (req.body.status === 'delivered' ) {
-        res.status(400).json({ message: "can't cancel this order" });
-    }
+export const getOrdersByStatus = asyncHandler(async (req, res) => {
+  const { status } = req.params;
+  const orders = await Order.find({ status })
+    .populate('products.productId')
+    .populate('userId', 'name email');
+  
+  return res.status(200).json({ orders });
+});
 
-    if(req.body.status === 'cancelled') {
-        for (const product of order.products) {
-            await Product.findByIdAndUpdate(product.productId, {
-                $inc: { stock: product.quantity }
-            });
-        }
-        if(req.body.coupon){
-            await Coupon.updateOne(
-                { _id: req.body.coupon._id },
-                { $pull: { usedBy: req.id } }
-            );
-        }
-       
-      
+export const changeOrderStatus = asyncHandler(async (req, res) => {
+  const { orderId } = req.params;
+  const { status } = req.body;
+
+  const order = await Order.findById(orderId);
+  if (!order) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  if (order.status === 'delivered') {
+    return res.status(400).json({ message: "Can't modify a delivered order" });
+  }
+
+  if (status === 'cancelled') {
+    // Restore product stock
+    for (const product of order.products) {
+      await Product.findByIdAndUpdate(product.productId, {
+        $inc: { stock: product.quantity }
+      });
     }
 
-    
-    
-    order.updatedBy = req.user._id;
-    await order.save();
-    return res.status(200).json({ message: 'Order status updated successfully' });
-}
+    // Remove user from coupon usedBy if applicable
+    if (order.couponName) {
+      await Coupon.updateOne(
+        { name: order.couponName },
+        { $pull: { usedBy: order.userId } }
+      );
+    }
+  }
+
+  order.status = status;
+  order.updatedBy = req.user._id;
+  await order.save();
+
+  return res.status(200).json({ 
+    message: 'Order status updated successfully',
+    order 
+  });
+});
 
