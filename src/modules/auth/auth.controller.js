@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import User from "../../../DB/models/user.model.js";
 import jwt from "jsonwebtoken";
-import { sendEmail } from "../../utils/email";
+import { sendEmail } from "../../utils/sendEmail.js";
 import {customAlphabet, nanoid} from "nanoid";
 
 
