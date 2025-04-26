@@ -1,8 +1,5 @@
 import { User } from "./user.model.js";
-import { catchAsync } from "../../utils/catchAsync.js";
-import { AppError } from "../../utils/appError.js";
-import { sendAccountUpdate } from '../../utils/sendEmail.js';
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 
 // Get current user profile
 export const getProfile = catchAsync(async (req, res) => {
@@ -12,7 +9,7 @@ export const getProfile = catchAsync(async (req, res) => {
   }
   res.status(200).json({
     status: "success",
-    data: user
+    data: user,
   });
 });
 
@@ -20,7 +17,9 @@ export const getProfile = catchAsync(async (req, res) => {
 export const updateProfile = catchAsync(async (req, res) => {
   const allowedUpdates = ["name", "email", "phone"];
   const updates = Object.keys(req.body);
-  const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+  const isValidOperation = updates.every((update) =>
+    allowedUpdates.includes(update)
+  );
 
   if (!isValidOperation) {
     throw new AppError("Invalid updates", 400);
@@ -31,12 +30,12 @@ export const updateProfile = catchAsync(async (req, res) => {
     throw new AppError("User not found", 404);
   }
 
-  updates.forEach(update => user[update] = req.body[update]);
+  updates.forEach((update) => (user[update] = req.body[update]));
   await user.save();
 
   res.status(200).json({
     status: "success",
-    data: user
+    data: user,
   });
 });
 
@@ -48,7 +47,7 @@ export const deleteProfile = catchAsync(async (req, res) => {
   }
   res.status(204).json({
     status: "success",
-    data: null
+    data: null,
   });
 });
 
@@ -58,7 +57,7 @@ export const getAllUsers = catchAsync(async (req, res) => {
   res.status(200).json({
     status: "success",
     results: users.length,
-    data: users
+    data: users,
   });
 });
 
@@ -70,7 +69,7 @@ export const getUserById = catchAsync(async (req, res) => {
   }
   res.status(200).json({
     status: "success",
-    data: user
+    data: user,
   });
 });
 
@@ -91,7 +90,7 @@ export const updateUserRole = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: "success",
-    data: user
+    data: user,
   });
 });
 
@@ -103,7 +102,7 @@ export const deleteUser = catchAsync(async (req, res) => {
   }
   res.status(204).json({
     status: "success",
-    data: null
+    data: null,
   });
 });
 
@@ -131,7 +130,7 @@ export const changePassword = catchAsync(async (req, res) => {
 
   res.status(200).json({
     status: "success",
-    message: "Password changed successfully"
+    message: "Password changed successfully",
   });
 });
 
@@ -139,40 +138,42 @@ export const changePassword = catchAsync(async (req, res) => {
 export const updateUserStatus = catchAsync(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
-  
+
   // Validate status
-  if (!['active', 'inactive'].includes(status)) {
-    throw new AppError("Invalid status. Must be either 'active' or 'inactive'", 400);
+  if (!["active", "inactive"].includes(status)) {
+    throw new AppError(
+      "Invalid status. Must be either 'active' or 'inactive'",
+      400
+    );
   }
-  
+
   const user = await User.findById(id);
-  
+
   if (!user) {
     throw new AppError("User not found", 404);
   }
-  
+
   // Prevent self-deactivation
   if (user._id.toString() === req.user._id.toString()) {
     throw new AppError("Cannot change your own status", 400);
   }
-  
+
   // Prevent deactivating super admin
-  if (user.role === 'superadmin' && status === 'inactive') {
+  if (user.role === "superadmin" && status === "inactive") {
     throw new AppError("Cannot deactivate a super admin", 403);
   }
-  
+
   user.status = status;
   await user.save();
-  
-  res.status(200).json({ 
+
+  res.status(200).json({
     status: "success",
-    message: `User status updated to ${status}`, 
+    message: `User status updated to ${status}`,
     data: {
       _id: user._id,
       name: user.name,
       email: user.email,
-      status: user.status
-    }
+      status: user.status,
+    },
   });
 });
-

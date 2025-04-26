@@ -1,9 +1,10 @@
 import express from "express";
 import * as userController from "./user.controller.js";
 import { auth } from "../../middleware/auth.js";
-import { roles } from "../../middleware/roles.js";
-import { validation } from '../../middleware/validation.js';
-import { updateProfileSchema, changePasswordSchema } from './user.validation.js';
+import {
+  updateProfileSchema,
+  changePasswordSchema,
+} from "./user.validation.js";
 
 const router = express.Router();
 
@@ -19,18 +20,19 @@ router.patch("/:id/role", auth(roles.ADMIN), userController.updateUserRole);
 router.delete("/:id", auth(roles.ADMIN), userController.deleteUser);
 
 // Update user profile
-router.put('/update',
-  auth('user'),
+router.put(
+  "/update",
+  auth("user"),
   validation(updateProfileSchema),
   userController.updateProfile
 );
 
 // Change password
-router.put('/change-password',
-  auth('user'),
+router.put(
+  "/change-password",
+  auth("user"),
   validation(changePasswordSchema),
   userController.changePassword
 );
 
 export default router;
-
