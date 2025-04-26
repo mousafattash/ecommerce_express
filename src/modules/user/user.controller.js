@@ -1,4 +1,4 @@
-import { User } from "./user.model.js";
+import User from "../../../DB/models/user.model.js";
 import bcrypt from "bcrypt";
 
 // Get current user profile
