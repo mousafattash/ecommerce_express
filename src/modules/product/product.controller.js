@@ -1,6 +1,5 @@
 import slugify from "slugify";
 import cloudinary from "../../utils/cloudinary.js";
-import cloudinary from "../../utils/cloudinary.js";
 
 import Product from "../../../DB/models/product.model.js";
 

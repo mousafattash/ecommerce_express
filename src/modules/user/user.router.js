@@ -5,34 +5,28 @@ import {
   updateProfileSchema,
   changePasswordSchema,
 } from "./user.validation.js";
+import { validate } from "../../middleware/validation.js";
 
 const router = express.Router();
 
-// Public routes
-router.get("/profile", auth(), userController.getProfile);
-router.patch("/profile", auth(), userController.updateProfile);
-router.delete("/profile", auth(), userController.deleteProfile);
+const roles = {
+  USER: 'user',
+  ADMIN: 'admin',
+  superAdmin: 'superAdmin',
+};
+
+// User routes
+router.get("/profile", auth("user"), userController.getProfile);
+router.put("/profile", auth("user"), validate(updateProfileSchema), userController.updateProfile);
+router.delete("/profile", auth("user"), userController.deleteProfile);
+router.put("/change-password", auth("user"), validate(changePasswordSchema), userController.changePassword);
 
 // Admin routes
-router.get("/", auth(roles.ADMIN), userController.getAllUsers);
-router.get("/:id", auth(roles.ADMIN), userController.getUserById);
-router.patch("/:id/role", auth(roles.ADMIN), userController.updateUserRole);
-router.delete("/:id", auth(roles.ADMIN), userController.deleteUser);
+router.get("/", auth("admin"), userController.getAllUsers);
+router.get("/:id", auth("admin"), userController.getUserById);
+router.put("/:id/role", auth("admin"), userController.updateUserRole);
+router.put("/:id/status", auth("admin"), userController.updateUserStatus);
+router.delete("/:id", auth("admin"), userController.deleteUser);
 
-// Update user profile
-router.put(
-  "/update",
-  auth("user"),
-  validation(updateProfileSchema),
-  userController.updateProfile
-);
-
-// Change password
-router.put(
-  "/change-password",
-  auth("user"),
-  validation(changePasswordSchema),
-  userController.changePassword
-);
 
 export default router;

@@ -1,8 +1,9 @@
 import User from "../../../DB/models/user.model.js";
 import bcrypt from "bcrypt";
+import { asyncHandler } from "../../middleware/catchError.js";
 
 // Get current user profile
-export const getProfile = catchAsync(async (req, res) => {
+export const getProfile = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password");
   if (!user) {
     throw new AppError("User not found", 404);
@@ -14,7 +15,7 @@ export const getProfile = catchAsync(async (req, res) => {
 });
 
 // Update current user profile
-export const updateProfile = catchAsync(async (req, res) => {
+export const updateProfile = asyncHandler(async (req, res) => {
   const allowedUpdates = ["name", "email", "phone"];
   const updates = Object.keys(req.body);
   const isValidOperation = updates.every((update) =>
@@ -40,7 +41,7 @@ export const updateProfile = catchAsync(async (req, res) => {
 });
 
 // Delete current user profile
-export const deleteProfile = catchAsync(async (req, res) => {
+export const deleteProfile = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndDelete(req.user._id);
   if (!user) {
     throw new AppError("User not found", 404);
@@ -52,7 +53,7 @@ export const deleteProfile = catchAsync(async (req, res) => {
 });
 
 // Get all users (admin only)
-export const getAllUsers = catchAsync(async (req, res) => {
+export const getAllUsers = asyncHandler(async (req, res) => {
   const users = await User.find().select("-password");
   res.status(200).json({
     status: "success",
@@ -62,7 +63,7 @@ export const getAllUsers = catchAsync(async (req, res) => {
 });
 
 // Get user by ID (admin only)
-export const getUserById = catchAsync(async (req, res) => {
+export const getUserById = asyncHandler(async (req, res) => {
   const user = await User.findById(req.params.id).select("-password");
   if (!user) {
     throw new AppError("User not found", 404);
@@ -74,7 +75,7 @@ export const getUserById = catchAsync(async (req, res) => {
 });
 
 // Update user role (admin only)
-export const updateUserRole = catchAsync(async (req, res) => {
+export const updateUserRole = asyncHandler(async (req, res) => {
   const { role } = req.body;
   if (!["user", "admin"].includes(role)) {
     throw new AppError("Invalid role", 400);
@@ -95,7 +96,7 @@ export const updateUserRole = catchAsync(async (req, res) => {
 });
 
 // Delete user (admin only)
-export const deleteUser = catchAsync(async (req, res) => {
+export const deleteUser = asyncHandler(async (req, res) => {
   const user = await User.findByIdAndDelete(req.params.id);
   if (!user) {
     throw new AppError("User not found", 404);
@@ -106,7 +107,7 @@ export const deleteUser = catchAsync(async (req, res) => {
   });
 });
 
-export const changePassword = catchAsync(async (req, res) => {
+export const changePassword = asyncHandler(async (req, res) => {
   const { currentPassword, newPassword } = req.body;
   const userId = req.user._id;
 
@@ -135,7 +136,7 @@ export const changePassword = catchAsync(async (req, res) => {
 });
 
 // Update user status (admin only)
-export const updateUserStatus = catchAsync(async (req, res) => {
+export const updateUserStatus = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { status } = req.body;
 

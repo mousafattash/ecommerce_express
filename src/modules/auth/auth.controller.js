@@ -3,6 +3,7 @@ import User from "../../../DB/models/user.model.js";
 import jwt from "jsonwebtoken";
 import { sendEmail } from "../../utils/sendEmail.js";
 import {customAlphabet, nanoid} from "nanoid";
+import { asyncHandler } from "../../middleware/catchError.js";
 
 
 export const register = asyncHandler(async (req, res) => {
