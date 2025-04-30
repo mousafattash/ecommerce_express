@@ -7,3 +7,5 @@ const router = Router({mergeParams : true});
 
 router.post("/", auth('user'), controller.createReview);
 router.get("/number", controller.getReviewsCount);
+
+export default router;

@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import cloudinary from "../../utils/cloudinary";
+import cloudinary from "../../utils/cloudinary.js";
 
 import Product from '../../../DB/models/product.model.js';
 
@@ -113,5 +113,26 @@ export const deleteProduct = async (req, res) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+export const getAllProducts = async (req, res) => {
+    try {
+        const products = await Product.find({})
+            .populate('catagory', 'name')
+            .populate('createdBy', 'name')
+            .populate('updatedBy', 'name');
+
+        return res.status(200).json({ 
+            success: true,
+            count: products.length,
+            products 
+        });
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ 
+            success: false,
+            message: 'Internal server error' 
+        });
     }
 }

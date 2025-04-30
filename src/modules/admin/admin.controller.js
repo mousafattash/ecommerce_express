@@ -1,5 +1,5 @@
 import User from '../../../DB/models/user.model.js';
-import asyncHandler from '../../utils/asyncHandler.js';
+import {asyncHandler} from '../../middleware/catchError.js';
 
 // Get all users (admin & superadmin only)
 export const getAllUsers = asyncHandler(async (req, res) => {
