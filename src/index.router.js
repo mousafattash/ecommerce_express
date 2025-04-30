@@ -1,35 +1,38 @@
-import cors from 'cors';
-import connectdb from '../DB/connection.js';
-import authRouter from './modules/auth/auth.router.js';
-import categoryRouter from './modules/catagory/catagory.router.js';
-import productRouter from './modules/product/product.router.js';
-import couponRouter from './modules/coupon/coupon.router.js';
-import cartRouter from './modules/cart/cart.router.js';
-import orderRouter from './modules/order/order.router.js';
-import adminRouter from './modules/admin/admin.router.js';
-import { Router } from 'express';
+import express from "express";
+import cors from "cors";
+import connectdb from "../DB/connection.js";
+import authRouter from "./modules/auth/auth.router.js";
+import catagoryRouter from "./modules/catagory/catagory.router.js";
+import productRouter from "./modules/product/product.router.js";
+import couponRouter from "./modules/coupon/coupon.router.js";
+import cartRouter from "./modules/cart/cart.router.js";
+import orderRouter from "./modules/order/order.router.js";
+import userRouter from "./modules/user/user.router.js";
 
-const initApp=async(app, express)=>{
-  app.use(express.json());
+const initApp = (app) => {
+  // Middleware
   app.use(cors());
+  app.use(express.json());
   connectdb();
 
-  app.get('/', (req, res) => {
-    res.send('Welcome to the E-commerce API');
-  }
-  );
-  app.use('/api/auth', authRouter);
-  app.use('/api/category', categoryRouter);
-  app.use('/api/product', productRouter);
-  app.use('/api/coupon', couponRouter);
-  app.use('/api/cart', cartRouter);
-  app.use('/api/order', orderRouter);
-  app.use('/api/admin', adminRouter);
+  // Routes
+  app.use("/api/auth", authRouter);
+  app.use("/api/categories", catagoryRouter);
+  app.use("/api/products", productRouter);
+  app.use("/api/coupons", couponRouter);
+  app.use("/api/cart", cartRouter);
+  app.use("/api/orders", orderRouter);
+  app.use("/api/users", userRouter);
 
-    app.get('*', (req, res) => {
-      return res.status(404).json({messafe:'Page not found'});
-    });
-  
+  // Welcome route
+  app.get("/", (req, res) => {
+    res.json({ message: "Welcome to E-Commerce API" });
+  });
+
+  // 404 handler
+  app.use("*", (req, res) => {
+    res.status(404).json({ message: "Route not found" });
+  });
 };
 
 export default initApp;

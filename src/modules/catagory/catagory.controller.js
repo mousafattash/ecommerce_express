@@ -4,10 +4,10 @@ import { auth } from '../../middleware/auth.js';
 
 
 export const createCategory = async (req, res) => {
-    const { name } = req.body;
-    req.body.slug = slugify(name, { lower: true });
-    req.body.createdBy = req.id;
-    req.body.updatedBy = req.id;
+  const { name } = req.body;
+  req.body.slug = slugify(name, { lower: true });
+  req.body.createdBy = req.id;
+  req.body.updatedBy = req.id;
 
     const catagory=await Category.create(req.body);
     if (!catagory) {
@@ -31,31 +31,32 @@ export const getAllCategories = async (req, res) => {
 
 
 export const getActiveCategories = async (req, res) => {
-    try {
-        const categories = await Category.find({ status: 'active' })
-            .populate('createdBy', 'name')
-            .populate('updatedBy', 'name');
-        return res.status(200).json({ categories });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
-    }
-}
-
+  try {
+    const categories = await Category.find({ status: "active" })
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
+    return res.status(200).json({ categories });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 
 export const getCategoryById = async (req, res) => {
-    try {
-        const { id } = req.params;
-        const category = await Category.findById(id).populate('createdBy', 'name').populate('updatedBy', 'name');
-        if (!category) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-        return res.status(200).json({ category });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
+  try {
+    const { id } = req.params;
+    const category = await Category.findById(id)
+      .populate("createdBy", "name")
+      .populate("updatedBy", "name");
+    if (!category) {
+      return res.status(404).json({ message: "Category not found" });
     }
-}
+    return res.status(200).json({ category });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
 export const updateCategory = async (req, res) => {
     try {
         const { id } = req.params;
@@ -91,19 +92,19 @@ export const updateCategory = async (req, res) => {
     }
 }
 export const deleteCategory = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        // Find and delete the category
-        const deletedCategory = await Category.findByIdAndDelete(id);
+    // Find and delete the category
+    const deletedCategory = await Category.findByIdAndDelete(id);
 
-        if (!deletedCategory) {
-            return res.status(404).json({ message: 'Category not found' });
-        }
-
-        return res.status(200).json({ message: 'Category deleted successfully' });
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({ message: 'Internal server error' });
+    if (!deletedCategory) {
+      return res.status(404).json({ message: "Category not found" });
     }
-}
+
+    return res.status(200).json({ message: "Category deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};

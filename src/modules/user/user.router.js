@@ -1,30 +1,38 @@
-import express from 'express';
-import { getProfile, updateProfile, changePassword } from './user.controller.js';
-import { auth } from '../../middleware/auth.js';
-import { validation } from '../../middleware/validation.js';
-import { updateProfileSchema, changePasswordSchema } from './user.validation.js';
+import express from "express";
+import * as userController from "./user.controller.js";
+import { auth } from "../../middleware/auth.js";
+import {
+  updateProfileSchema,
+  changePasswordSchema,
+} from "./user.validation.js";
 
 const router = express.Router();
 
-// Get user profile
-router.get('/profile',
-  auth('user'),
-  getProfile
-);
+// Public routes
+router.get("/profile", auth(), userController.getProfile);
+router.patch("/profile", auth(), userController.updateProfile);
+router.delete("/profile", auth(), userController.deleteProfile);
+
+// Admin routes
+router.get("/", auth(roles.ADMIN), userController.getAllUsers);
+router.get("/:id", auth(roles.ADMIN), userController.getUserById);
+router.patch("/:id/role", auth(roles.ADMIN), userController.updateUserRole);
+router.delete("/:id", auth(roles.ADMIN), userController.deleteUser);
 
 // Update user profile
-router.put('/update',
-  auth('user'),
+router.put(
+  "/update",
+  auth("user"),
   validation(updateProfileSchema),
-  updateProfile
+  userController.updateProfile
 );
 
 // Change password
-router.put('/change-password',
-  auth('user'),
+router.put(
+  "/change-password",
+  auth("user"),
   validation(changePasswordSchema),
-  changePassword
+  userController.changePassword
 );
 
 export default router;
-
